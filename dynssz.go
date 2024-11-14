@@ -126,18 +126,24 @@ func (d *DynSsz) UnmarshalSSZ(target any, ssz []byte) error {
 }
 
 func (d *DynSsz) HashTreeRoot(source any) ([32]byte, error) {
-	sourceType := reflect.TypeOf(source)
-	sourceValue := reflect.ValueOf(source)
-
 	hh := DefaultHasherPool.Get()
 	defer func() {
 		DefaultHasherPool.Put(hh)
 	}()
 
-	err := d.buildRootFromType(sourceType, sourceValue, hh, nil, nil, 0)
-	if err != nil {
-		return [32]byte{}, err
-	}
+	d.HashTreeRootWith(source, hh)
 
 	return hh.HashRoot()
 }
+
+// HashTreeRootWith calculates the hash tree root of the given source object using the provided Hasher instance.
+func (d *DynSsz) HashTreeRootWith(source any, hh *Hasher) error {
+	sourceType := reflect.TypeOf(source)
+	sourceValue := reflect.ValueOf(source)
+	err := d.buildRootFromType(sourceType, sourceValue, hh, nil, nil, 0)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
